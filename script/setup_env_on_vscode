@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -eu
+
+# CONSTANTS
+TARGET_DIR=$(cd $(dirname $0); pwd |xargs dirname)
+
+# FILES for setup
+LINTER=$TARGET_DIR/linter/flake8
+
+# Setup env for each language
+
+setup_python () {
+    pyenv versions;
+    read -p "Choose python-version from the above: " pyver;
+    pyenv local $pyver;
+    poetry init;
+    yes | set_gitignore python;
+    cat $LINTER >> ./.flake8;
+}
+
+# Main
+read -p "Are you sure to newly setup python env at the current dir? (y/N): " yn
+case "$yn" in
+    [yY]*) 
+        setup_python
+        exit 0;;
+    *) echo "abort";;
+esac
