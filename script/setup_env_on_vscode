@@ -16,6 +16,7 @@ setup_python () {
     pyenv local $pyver;
     poetry init;
     yes | set_gitignore python;
+    set_license;
     cat $LINTER >> ./.flake8;
 }
 
