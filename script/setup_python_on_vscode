@@ -1,0 +1,56 @@
+#!/bin/bash
+# Note:
+#     Do not forget to run poerty install command after set-up
+
+
+set -eu
+
+# color
+reset=$'\e[0m'
+cyan=$'\e[36m'
+
+
+# CONSTANTS
+TARGET_DIR=$(cd $(dirname $0); pwd |xargs dirname)
+
+# FILES for setup
+LINTER=$TARGET_DIR/linter/flake8
+
+# Setup env for each language
+
+setup_python () {
+    pyenv versions;
+    read -p "${cyan}Choose python-version from the above: ${reset}" pyver;
+    pyenv local $pyver;
+    poetry init;
+}
+
+detail_poetrysetup (){
+    read -p "${cyan}Will you set the package as packge-mode = True? (T/F): ${reset}" tf
+    case "$tf" in
+        [tT]*) 
+            sed -i '/readme = "README/s/$/ \npackage-mode = true/' ./pyproject.toml;;
+        [fF]*)
+            sed -i '/readme = "README/s/$/ \npackage-mode = false/' ./pyproject.toml;;
+        *) 
+            echo "not define package-mode item on the pyproject.toml";;
+    esac
+}
+
+detail_othersetup (){
+    yes | set_gitignore python;
+    set_license;
+    cat $LINTER >> ./.flake8;
+}
+
+
+# Main
+read -p "${cyan}Are you sure to newly setup python env at the current dir? (y/N)${reset}: " yn
+case "$yn" in
+    [yY]*) 
+        setup_python
+        detail_poetrysetup
+        detail_othersetup
+        exit 0;;
+    *) echo "abort";;
+esac
