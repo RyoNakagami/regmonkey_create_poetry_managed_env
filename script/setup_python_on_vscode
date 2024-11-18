@@ -14,7 +14,8 @@ cyan=$'\e[36m'
 TARGET_DIR=$(cd $(dirname $0); pwd |xargs dirname)
 
 # FILES for setup
-LINTER=$TARGET_DIR/linter/flake8
+LINTER=$TARGET_DIR/linter/pyproject_setup
+PACKAGE_SETUP=$TARGET_DIR/python-modules/poetry_dev_setup
 
 # Setup env for each language
 
@@ -25,11 +26,11 @@ setup_python () {
     poetry init;
 }
 
-detail_poetrysetup (){
+packagemode_poetrysetup (){
     read -p "${cyan}Will you set the package as packge-mode = True? (T/F): ${reset}" tf
     case "$tf" in
         [tT]*) 
-            sed -i '/readme = "README/s/$/ \npackage-mode = true/' ./pyproject.toml;;
+            sed -i '/readme = "README/s/$/ \npackages = [{ include = "*", from = "src" }]\npackage-mode = true/' ./pyproject.toml;;
         [fF]*)
             sed -i '/readme = "README/s/$/ \npackage-mode = false/' ./pyproject.toml;;
         *) 
@@ -37,10 +38,12 @@ detail_poetrysetup (){
     esac
 }
 
+
 detail_othersetup (){
     yes | set_gitignore python;
     set_license;
-    cat $LINTER >> ./.flake8;
+    cat $LINTER >> ./pyproject.toml;
+    bash $PACKAGE_SETUP;
 }
 
 
@@ -49,7 +52,7 @@ read -p "${cyan}Are you sure to newly setup python env at the current dir? (y/N)
 case "$yn" in
     [yY]*) 
         setup_python
-        detail_poetrysetup
+        packagemode_poetrysetup
         detail_othersetup
         exit 0;;
     *) echo "abort";;

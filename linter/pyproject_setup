@@ -1,0 +1,12 @@
+
+[pytest]
+testpaths = ["tests"]
+
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 88
+
+[tool.ruff.lint]
+ignore = ["E203", "E262", "E265", "W291", "W605"]
+exclude = [".venv", "venv", "__pycache__", ".git"]
+select = ["E", "F", "W", "I", "Q"]
