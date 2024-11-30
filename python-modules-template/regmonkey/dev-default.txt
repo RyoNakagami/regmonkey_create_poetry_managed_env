@@ -1,0 +1,7 @@
+ipykernel
+jinja2
+nbformat
+ruff
+regmonkey-style
+plotly
+matplotlib
