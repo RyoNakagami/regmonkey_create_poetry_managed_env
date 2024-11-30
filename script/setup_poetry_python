@@ -1,0 +1,103 @@
+#!/bin/bash
+# Note:
+#   Do not forget to run poerty install command after set-up
+# Dependencies
+#   pyenv
+#   poetry
+#   setup_gitignore: from regmonkey_gitignore
+#   set_developer_document: from regmonkey_repository_document
+
+set -eu
+
+# color
+reset=$'\e[0m'
+cyan=$'\e[36m'
+red=$'\e[31m'
+green=$'\e[32m'
+
+# global variables
+TARGET_DIR=$(
+    cd $(dirname $0)
+    pwd | xargs dirname
+)
+
+# FILES for setup
+LINTER=$TARGET_DIR/linter/pyproject_setup
+PACKAGE_SETUP=$TARGET_DIR/python-modules/poetry_dev_setup
+
+# Setup env for each language
+
+setup_python() {
+    pyenv versions
+    read -p "${cyan}Choose python-version from the above: ${reset}" pyver
+    pyenv local $pyver
+    poetry init
+}
+
+fetch_projectname_from_toml() {
+    PROJECT_NAME=$(grep "name = " pyproject.toml | sed 's/name = "\(.*\)"/\1/')
+}
+
+packagemode_poetrysetup() {
+    tf="t"
+    read -p "${cyan}Will you set the package as packge-mode = True? (T/F) ${reset} [${green}true${reset}]" input_tf
+    tf="${input_tf:-$tf}"
+    case "$tf" in
+    [tT]*)
+        sed -i '/readme = "README/s/$/ \npackages = [{ include = "*", from = "src" }]\npackage-mode = true/' ./pyproject.toml
+        ;;
+    [fF]*)
+        sed -i '/readme = "README/s/$/ \npackage-mode = false/' ./pyproject.toml
+        ;;
+    *)
+        echo "not define package-mode item on the pyproject.toml"
+        ;;
+    esac
+}
+
+set_dependency() {
+    local TEMPLATE_SOURCE_DIR=$TARGET_DIR/python-modules-template/
+
+    ls $TEMPLATE_SOURCE_DIR
+    read -p "${cyan}please choose your template type from the above: ${reset}" TEMPLATE
+
+    local TARGET_TEMPLATE=$TEMPLATE_SOURCE_DIR/$TEMPLATE
+
+    if [ ! -d $TARGET_TEMPLATE ]; then
+        echo "${red}$TEMPLATE not exists.${reset}"
+        exit 1
+    fi
+
+    for file in $TARGET_TEMPLATE/*; do
+        poetry add --group $(basename $file .txt) $(cat $file)
+    done
+}
+
+setup_linter() {
+    cat $LINTER >>./pyproject.toml
+    bash $PACKAGE_SETUP
+}
+
+setup_contributions() {
+    DOCUMENT_DIRECTORY="./docs"
+    fetch_projectname_from_toml
+    read -p "${cyan}choose directory for documentation${reset} [${green} ./docs${reset}] " input_document_directory
+    DOCUMENT_DIRECTORY="${input_document_directory:-$DOCUMENT_DIRECTORY}"
+    set_developer_document -d $DOCUMENT_DIRECTORY -p $PROJECT_NAME
+}
+
+# main workflow
+read -p "${cyan}Are you sure to newly setup python env at the current dir? (y/N)${reset}: " yn
+case "$yn" in
+[yY]*)
+    setup_python
+    packagemode_poetrysetup
+    set_dependency
+    set_gitignore
+    set_license
+    setup_linter
+    setup_contributions
+    exit 0
+    ;;
+*) echo "${red}abort${reset}" ;;
+esac

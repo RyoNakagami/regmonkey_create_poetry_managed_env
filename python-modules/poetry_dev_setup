@@ -1,9 +1,0 @@
-#!/bin/bash
-# Note:
-#     Do not forget to run poerty install command after set-up
-
-
-set -eu
-
-
-poetry add --group dev pytest pytest-ruff ipykernel nbformat jinja2
